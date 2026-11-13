@@ -1,0 +1,29 @@
+name: Extract site files
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract site zip to repo root
+        run: |
+          unzip -o blessing-buddy-site.zip
+          rm -f blessing-buddy-site.zip
+          rm -rf __MACOSX
+          if [ ! -f index.html ]; then
+            subdir=$(find . -maxdepth 3 -name index.html -not -path './.git/*' -print -quit | xargs dirname)
+            if [ -n "$subdir" ] && [ "$subdir" != "." ]; then
+              mv "$subdir"/* .
+              rm -rf "$subdir"
+            fi
+          fi
+          ls -1
+          git config user.name "blessing-buddy-tampa"
+          git config user.email "tamaraperez4@gmail.com"
+          git add -A
+          git status --short
+          git commit -m "Extract Blessing Buddy site files to repo root" || echo "Nothing to commit"
+          git push
